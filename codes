@@ -1,0 +1,301 @@
+Code 
+Finger print sensor
+#include <Adafruit_Fingerprint.h>
+SoftwareSerial mySerial(2, 3);
+Adafruit_Fingerprint finger = Adafruit_Fingerprint(&mySerial);
+uint8_t id;
+void setup()  
+{
+  Serial.begin(9600);
+  while (!Serial);
+  delay(100);
+  Serial.println("\n\nAdafruit Fingerprint sensor enrollment");
+
+  // set the data rate for the sensor serial port
+  finger.begin(57600);
+  
+  if (finger.verifyPassword()) {
+    Serial.println("Found fingerprint sensor!");
+  } else {
+    Serial.println("Did not find fingerprint sensor :(");
+    while (1) { delay(1); }
+  }
+}
+
+uint8_t readnumber(void) {
+  uint8_t num = 0;
+  
+  while (num == 0) {
+    while (! Serial.available());
+    num = Serial.parseInt();
+  }
+  return num;
+}
+
+void loop()                    
+{
+  Serial.println("Ready to enroll a fingerprint!");
+  Serial.println("Please type in the ID # (from 1 to 127) you want to save this finger as...");
+  id = readnumber();
+  if (id == 0)
+     return;
+  }
+  Serial.print("Enrolling ID #");
+  Serial.println(id);
+  
+  while (!  getFingerprintEnroll() );
+}
+
+uint8_t getFingerprintEnroll() {
+
+  int p = -1;
+  Serial.print("Waiting for valid finger to enroll as #"); Serial.println(id);
+  while (p != FINGERPRINT_OK) {
+    p = finger.getImage();
+    switch (p) {
+    case FINGERPRINT_OK:
+      Serial.println("Image taken");
+    
+    }
+  }
+
+
+  
+  Serial.println("Remove finger");
+  delay(2000);
+  p = 0;
+  while (p != FINGERPRINT_NOFINGER) {
+    p = finger.getImage();
+  }
+  Serial.print("ID "); Serial.println(id);
+  p = -1;
+  Serial.println("Place same finger again");
+  while (p != FINGERPRINT_OK) {
+    p = finger.getImage();
+    switch (p) {
+    case FINGERPRINT_OK:
+      Serial.println("Image taken");
+      break;
+    case FINGERPRINT_NOFINGER:
+      Serial.print(".");
+      break;
+    case FINGERPRINT_PACKETRECIEVEERR:
+      Serial.println("Communication error");
+      break;
+    case FINGERPRINT_IMAGEFAIL:
+      Serial.println("Imaging error");
+      break;
+    default:
+      Serial.println("Unknown error");
+      break;
+    }
+  }
+  Serial.print("Creating model for #");  Serial.println(id);
+  p = finger.createModel();
+  if (p == FINGERPRINT_OK) {
+    Serial.println("Prints matched!");
+  } else if (p == FINGERPRINT_PACKETRECIEVEERR) {
+    Serial.println("Communication error");
+    return p;
+  } else if (p == FINGERPRINT_ENROLLMISMATCH) {
+    Serial.println("Fingerprints did not match");
+    return p;
+  } else {
+    Serial.println("Unknown error");
+    return p;
+  }  
+  
+  For counter
+ #include<LiquidCrystal.h>
+const int rs=12, en=3, d4=4, d5=5, d6=6, d7=7 ;
+const int in=8,out=9;
+int temp=0;
+
+LiquidCrystal lcd(rs,en,d4,d5,d6,d7);
+
+void setup() {
+  
+lcd.begin(16,2);
+pinMode(in,INPUT);
+pinMode(out,INPUT);
+lcd.print("Visitor Counter");
+
+}
+
+void loop() {
+if(digitalRead(in)==1)
+  { 
+    temp=temp+1;
+    lcd.clear();
+    lcd.setCursor(0,0);
+    lcd.print("Counting");
+    lcd.setCursor(0,1);
+     lcd.print(temp);
+     delay(500);
+  }
+else if(digitalRead(out)==1)
+{
+   temp=temp-1;
+   lcd.clear();
+    lcd.setCursor(0,0);
+     lcd.print("Counting");
+   lcd.setCursor(0,1);
+   lcd.print(temp);
+      delay(500);
+}
+}
+
+RFID sensor
+#include <SPI.h>
+#include <MFRC522.h>
+ #define SS_PIN 10
+#define RST_PIN 9
+MFRC522 mfrc522(SS_PIN, RST_PIN);   
+ 
+void setup() 
+{
+  Serial.begin(9600);   
+  SPI.begin();     
+  mfrc522.PCD_Init();   
+  Serial.println("Approximate your card to the reader...");
+  Serial.println();
+
+}
+void loop() 
+{
+  // Look for new cards
+  if ( ! mfrc522.PICC_IsNewCardPresent()) 
+  {
+    return;
+  }
+  // Select one of the cards
+  if ( ! mfrc522.PICC_ReadCardSerial()) 
+  {
+    return;
+  }
+  //Show UID on serial monitor
+  Serial.print("UID tag :");
+  String content= "";
+  byte letter;
+  for (byte i = 0; i < mfrc522.uid.size; i++) 
+  {
+     Serial.print(mfrc522.uid.uidByte[i] < 0x10 ? " 0" : " ");
+     Serial.print(mfrc522.uid.uidByte[i], HEX);
+     content.concat(String(mfrc522.uid.uidByte[i] < 0x10 ? " 0" : " "));
+     content.concat(String(mfrc522.uid.uidByte[i], HEX));
+  }
+  Serial.println();
+  Serial.print("Message : ");
+  content.toUpperCase();
+  if (content.substring(1) == "BD 31 15 2B")
+  {
+    Serial.println("Authorized access");
+    Serial.println();
+    delay(3000);
+  }
+ else   {
+    Serial.println(" Access denied");
+    delay(3000);
+  }
+} 
+
+GIS sensor
+#include "TinyGPS++.h"
+#include "SoftwareSerial.h"
+SoftwareSerial GPRS(2,3);
+SoftwareSerial serial_connection(10, 11); //RX=pin 10, TX=pin 11
+TinyGPSPlus gps;//This is the GPS object that will pretty much do all the grunt work with the NMEA data
+float latitude=0; 
+float longitude=0;                       
+String Speed="";
+int Contrast=20;
+#define x A1
+#define y A2
+#define z A3
+int xsample=0;
+int ysample=0;
+int zsample=0;
+#define samples 10
+#define minVal -50
+#define MaxVal 50
+void setup()
+{
+  Serial.begin(9600);//This opens up communications to the Serial monitor in the Arduino IDE
+  serial_connection.begin(9600);//This opens up communications to the GPS 
+  Serial.println("successfully Initialized....");
+  Serial.println("GPS Start");//Just show to the monitor that the sketch has started
+  for(int i=0;i<samples;i++)
+  {
+    xsample+=analogRead(x);
+    ysample+=analogRead(y);
+    zsample+=analogRead(z);
+  }
+
+  xsample/=samples;
+  ysample/=samples;
+  zsample/=samples;
+
+  Serial.println(xsample);
+  Serial.println(ysample);
+  Serial.println(zsample);
+  delay(1000);
+}
+
+void loop()
+{
+  while(serial_connection.available())//While there are characters to come from the GPS
+  {
+    gps.encode(serial_connection.read());//This feeds the serial NMEA data into the library one char at a time
+    //Serial.println("Satellite Count:");
+  }
+  if(gps.location.isUpdated())//This will pretty much be fired all the time anyway but will at least reduce it to only after a package of NMEA data comes in
+  {
+    //Get the latest info from the gps object which it derived from the data sent by the GPS unit
+    Serial.println("Satellite Count:");
+    Serial.println(gps.satellites.value());
+    Serial.prin tln("Latitude:");
+    Serial.println(gps.location.lat(), 6);
+    Serial.println("Longitude:");
+    Serial.println(gps.location.lng(), 6);
+    Serial.println("Speed MPH:");
+    Serial.println(gps.speed.mph());
+    Serial.println("Altitude Feet:");
+    Serial.println(gps.altitude.feet());
+    Serial.println("");
+  delay(1000);
+  }
+   int value1=analogRead(x);
+    int value2=analogRead(y);
+    int value3=analogRead(z);
+
+    int xValue=xsample-value1;
+    int yValue=ysample-value2;
+    int zValue=zsample-value3;
+    
+    Serial.print("x=");
+    Serial.println(xValue);
+    Serial.print("y=");
+    Serial.println(yValue);
+    Serial.print("z=");
+    Serial.println(zValue);
+  delay(1000);
+  //condition for accident detection
+    if(xValue < minVal || xValue > MaxVal  || yValue < minVal || yValue > MaxVal  || zValue < minVal || zValue > MaxVal)
+    {//in case of accident calling to a number 5 times if needed we can add multiple numbers.
+      for(int i=0;i<5;i++)
+      {
+      Serial.println("calling");
+      GPRS.begin(9600);
+      Serial.println("Connecting to network");
+      delay(20000);
+      Serial.println("Should be connected to network by now");
+      GPRS.print("ATD+xxxxxxxxxxxx;\r");
+      Serial.println("Dialing");
+      delay(12000); //Give it time to connect
+      //GPRS.print("ATH\r"); // And disconnect
+      Serial.println("Disconnect");
+      }
+    }`
+    delay(1000);
+}
+
